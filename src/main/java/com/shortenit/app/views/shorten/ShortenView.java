@@ -4,12 +4,15 @@ import com.shortenit.app.model.CreateShortURLRequest;
 import com.shortenit.app.model.CreateShortURLResponse;
 import com.shortenit.app.model.ExpandShortURLResponse;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.http.HttpEntity;
@@ -25,28 +28,33 @@ import java.net.URI;
 public class ShortenView extends Composite<VerticalLayout> {
 
     public ShortenView() {
-        H1 h1 = new H1("Shorten-it & Expand-it");
-        MessageInput messageInputShorten = new MessageInput();
-        MessageInput messageInputExpand = new MessageInput();
+        // Adding the logo at the top
+        Image img = new Image("themes/shortenit/components/Images/Logo.png", "Logo");
+        img.setWidth("200px");
+        img.setHeight("150px");
+
+        TextField textField = new TextField();
+        Button buttonPrimary = new Button("Shorten-it");
+        Button buttonSecondary = new Button("Expand-it");
 
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
         getContent().setJustifyContentMode(JustifyContentMode.CENTER);
         getContent().setAlignItems(Alignment.CENTER);
 
-        h1.setWidth("max-content");
-        messageInputShorten.setWidth("min-content");
-        messageInputExpand.setWidth("min-content");
+        textField.setLabel("Paste your URL");
+        textField.setWidth("400px");
+        textField.setHeight("60px");
 
-        // Labeling the input fields
-        messageInputShorten.getElement().setProperty("placeholder", "Enter URL to shorten...");
-        messageInputExpand.getElement().setProperty("placeholder", "Enter short URL key to expand...");
+        buttonPrimary.setWidth("min-content");
+        buttonPrimary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        buttonSecondary.setWidth("min-content");
 
-        getContent().add(h1, messageInputShorten, messageInputExpand);
+        getContent().add(img, textField, buttonPrimary, buttonSecondary);
 
         // Handle URL shortening
-        messageInputShorten.addSubmitListener(event -> {
-            String inputUrl = event.getValue();
+        buttonPrimary.addClickListener(event -> {
+            String inputUrl = textField.getValue();
             try {
                 sendInputToController(inputUrl);
             } catch (Exception e) {
@@ -55,8 +63,8 @@ public class ShortenView extends Composite<VerticalLayout> {
         });
 
         // Handle URL expansion
-        messageInputExpand.addSubmitListener(event -> {
-            String shortURLKey = event.getValue();
+        buttonSecondary.addClickListener(event -> {
+            String shortURLKey = textField.getValue();
             try {
                 expandShortURL(shortURLKey);
             } catch (Exception e) {
@@ -83,7 +91,7 @@ public class ShortenView extends Composite<VerticalLayout> {
                     CreateShortURLResponse.class
             ).getBody();
 
-            Notification.show("Shortened URL: " + response.shortURL(), 10000, Notification.Position.MIDDLE);
+            Notification.show("Shortened URL: " + (response != null ? response.shortURL() : null), 10000, Notification.Position.MIDDLE);
         } catch (Exception e) {
             Notification.show("Error: " + e.getMessage(), 10000, Notification.Position.MIDDLE);
         }
@@ -93,7 +101,6 @@ public class ShortenView extends Composite<VerticalLayout> {
         RestTemplate restTemplate = new RestTemplate();
 
         try {
-            // Send GET request to the REST controller endpoint
             ExpandShortURLResponse response = restTemplate.exchange(
                     "http://localhost:8080/api/v1/url-shortener/expand/" + shortURLKey,
                     HttpMethod.GET,
@@ -101,10 +108,9 @@ public class ShortenView extends Composite<VerticalLayout> {
                     ExpandShortURLResponse.class
             ).getBody();
 
-            // Redirect to the original long URL
-            String originalURL = response.longURL().toString();
+            // Redirect to the original long URL in a new tab
+            String originalURL = response != null ? response.longURL().toString() : null;
             getUI().ifPresent(ui -> ui.getPage().executeJs("window.open($0, '_blank')", originalURL));
-//            getUI().ifPresent(ui -> ui.getPage().setLocation(originalURL));
 
         } catch (Exception e) {
             Notification.show("Error expanding URL: " + e.getMessage(), 10000, Notification.Position.MIDDLE);
