@@ -53,8 +53,7 @@ public class URLShortenerService {
   }
 }
 
-  //  **********the following code would help to redirect according to URL HTTP
-  // response*************
+  //  **********the following code would help to redirect according to URL HTTP response*************
 
   //  public ExpandShortURLResponse expand(final String shortURLKey) throws URISyntaxException {
   //    // Retrieve the URLShortened object using the key
@@ -77,3 +76,4 @@ public class URLShortenerService {
   //    // Return the expanded URL and its validity
   //    return new ExpandShortURLResponse(longURL, validUntil);
   //  }
+  // }
